@@ -1,647 +1,388 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RE7Z0TMCT3"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-RE7Z0TMCT3');
-  </script>
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="assets/star.png" type="image/x-icon" />
   <title>Low-Burden Data Augmentation for Dysarthric ASR</title>
-
-  <!-- Chart.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --bg: #ffffff;
-      --surface: #f8f9fa;
-      --text: #202124;
-      --muted: #5f6368;
-      --border: #dadce0;
-
-      --accent: #1a73e8;
-      --accent-weak: rgba(26,115,232,.08);
-
-      --shadow-sm: 0 1px 2px 0 rgba(60,64,67,.30), 0 1px 3px 1px rgba(60,64,67,.15);
-      --shadow-md: 0 1px 3px 0 rgba(60,64,67,.30), 0 4px 8px 3px rgba(60,64,67,.15);
-      --shadow-lg: 0 2px 6px 2px rgba(60,64,67,.15), 0 8px 24px 4px rgba(60,64,67,.15);
-
-      --radius: 10px;
-      --radius-lg: 14px;
-
-      --space-1: 4px;
-      --space-2: 8px;
-      --space-3: 12px;
-      --space-4: 16px;
-      --space-5: 24px;
-      --space-6: 32px;
-      --space-7: 48px;
-      --space-8: 64px;
-
-      --focus: 0 0 0 3px rgba(26,115,232,.30);
+    :root {
+      --bg:           #fafaf8;
+      --surface:      #ffffff;
+      --surface2:     #f4f3ef;
+      --text:         #1a1a18;
+      --muted:        #6b6b62;
+      --border:       #e4e3dd;
+      --accent:       #2d6a4f;
+      --accent-light: rgba(45,106,79,.08);
+      --accent-mid:   rgba(45,106,79,.18);
+      --warm:         #c17f3a;
+      --warm-light:   rgba(193,127,58,.10);
+      --shadow-sm:    0 1px 3px rgba(26,26,24,.08), 0 1px 2px rgba(26,26,24,.06);
+      --shadow-md:    0 4px 16px rgba(26,26,24,.10), 0 2px 4px rgba(26,26,24,.06);
+      --shadow-lg:    0 12px 40px rgba(26,26,24,.12), 0 4px 8px rgba(26,26,24,.06);
+      --radius:       10px;
+      --radius-lg:    16px;
+      --focus:        0 0 0 3px rgba(45,106,79,.28);
     }
 
-    @media (prefers-color-scheme: dark){
-      :root{
-        --bg: #202124;
-        --surface: #292a2d;
-        --text: #e8eaed;
-        --muted: #9aa0a6;
-        --border: #5f6368;
-
-        --accent: #8ab4f8;
-        --accent-weak: rgba(138,180,248,.12);
-
-        --shadow-sm: 0 1px 2px 0 rgba(0,0,0,.30), 0 1px 3px 1px rgba(0,0,0,.15);
-        --shadow-md: 0 1px 3px 0 rgba(0,0,0,.30), 0 4px 8px 3px rgba(0,0,0,.15);
-        --shadow-lg: 0 2px 6px 2px rgba(0,0,0,.15), 0 8px 24px 4px rgba(0,0,0,.15);
-
-        --focus: 0 0 0 3px rgba(138,180,248,.30);
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:           #14140f;
+        --surface:      #1e1e18;
+        --surface2:     #252520;
+        --text:         #eeeee8;
+        --muted:        #8a8a7e;
+        --border:       #38382e;
+        --accent:       #74c69d;
+        --accent-light: rgba(116,198,157,.09);
+        --accent-mid:   rgba(116,198,157,.20);
+        --warm:         #e0a060;
+        --warm-light:   rgba(224,160,96,.10);
+        --shadow-sm:    0 1px 3px rgba(0,0,0,.30);
+        --shadow-md:    0 4px 16px rgba(0,0,0,.32);
+        --shadow-lg:    0 12px 40px rgba(0,0,0,.40);
+        --focus:        0 0 0 3px rgba(116,198,157,.28);
       }
     }
 
-    *{ box-sizing: border-box; }
-    html, body{ height: 100%; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
 
-    body{
+    body {
       margin: 0;
-      font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
-      line-height: 1.6;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
       color: var(--text);
       background: var(--bg);
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
     }
 
-    a{ color: var(--accent); text-decoration: none; }
-    a:hover{ text-decoration: underline; }
+    a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { opacity: .8; }
 
-    .skip-link{
-      position: absolute;
-      left: -999px;
-      top: 10px;
-      background: var(--surface);
-      color: var(--text);
-      border: 1px solid var(--border);
-      padding: 10px 12px;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      z-index: 9999;
+    .skip-link {
+      position: absolute; left: -999px; top: 10px;
+      background: var(--surface); color: var(--text);
+      border: 1px solid var(--border); padding: 10px 14px;
+      border-radius: var(--radius); box-shadow: var(--shadow-sm); z-index: 9999;
     }
-    .skip-link:focus{
-      left: 12px;
-      outline: none;
-      box-shadow: var(--focus);
-    }
+    .skip-link:focus { left: 12px; outline: none; box-shadow: var(--focus); }
 
-    .container{
-      max-width: 1160px;
+    /* ── Layout ── */
+    .container {
+      max-width: 1080px;
       margin: 0 auto;
-      padding: clamp(18px, 4vw, 64px) clamp(14px, 3vw, 28px);
+      padding: clamp(20px, 4vw, 56px) clamp(16px, 3vw, 32px);
     }
 
-    header{
-      text-align: center;
-      padding: var(--space-8) var(--space-6);
+    /* ── Header ── */
+    header {
+      padding: clamp(40px, 6vw, 80px) 0 clamp(24px, 4vw, 48px);
+      max-width: 760px;
     }
 
-    .eyebrow{
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--accent);
-      font-weight: 500;
-      letter-spacing: .5px;
-      text-transform: uppercase;
-      font-size: .75rem;
-      margin-bottom: var(--space-3);
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: .75rem; font-weight: 500;
+      letter-spacing: 1.2px; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 16px;
+    }
+    .eyebrow::before {
+      content: '';
+      display: inline-block; width: 24px; height: 2px;
+      background: var(--accent); border-radius: 2px;
     }
 
-    h1{
-      margin: 0 auto var(--space-4);
-      font-size: clamp(2.15rem, 4vw, 3.4rem);
-      letter-spacing: -0.4px;
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2rem, 4vw, 3.2rem);
       font-weight: 400;
-      max-width: 30ch;
-      line-height: 1.2;
+      line-height: 1.15;
+      letter-spacing: -.3px;
+      margin: 0 0 20px;
+      color: var(--text);
     }
 
-    .subhead{
-      margin: 0 auto var(--space-5);
+    .subhead {
+      font-size: clamp(.95rem, 1.3vw, 1.075rem);
       color: var(--muted);
-      font-size: clamp(1rem, 1.35vw, 1.125rem);
-      max-width: 70ch;
-      font-weight: 400;
-    }
-
-    .meta{
-      margin-top: var(--space-4);
-      color: var(--muted);
-      font-size: .98rem;
-    }
-
-    .meta .authors{
-      margin: 0 0 var(--space-1);
-      line-height: 1.75;
-    }
-
-    .meta .authors a{
-      color: var(--accent);
-      text-decoration: underline;
-      text-underline-offset: 2px;
-    }
-
-    .meta .authors a:hover{
-      color: #1557b0;
-    }
-
-    .meta .affiliations{
+      max-width: 62ch;
       margin: 0;
-      font-size: .95rem;
+      font-weight: 300;
+      line-height: 1.7;
     }
 
-    .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      margin-top: var(--space-6);
-      padding: var(--space-2) var(--space-3);
+    /* ── Topbar ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 20;
+      padding: 0 clamp(16px, 3vw, 32px);
       border-bottom: 1px solid var(--border);
       background: var(--bg);
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-2);
-      align-items: center;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex; align-items: center;
       justify-content: space-between;
+      gap: 12px;
     }
 
-    @media (max-width: 768px){
-      .topbar{
-        padding: var(--space-2);
-        flex-direction: column;
-        align-items: stretch;
-      }
-    }
-
-    .nav{
-      display: flex;
-      align-items: center;
-      overflow-x: auto;
+    .nav {
+      display: flex; align-items: center;
+      overflow-x: auto; scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
     }
+    .nav::-webkit-scrollbar { display: none; }
 
-    .nav::-webkit-scrollbar{ display: none; }
-
-    .nav a{
-      display: inline-flex;
-      align-items: center;
-      padding: var(--space-3) var(--space-4);
+    .nav a {
+      display: inline-flex; align-items: center;
+      padding: 14px 16px;
       border-bottom: 2px solid transparent;
-      color: var(--muted);
-      font-weight: 500;
-      font-size: .875rem;
-      white-space: nowrap;
-      transition: color .2s ease, border-color .2s ease, background-color .2s ease;
-      border-radius: 8px 8px 0 0;
+      color: var(--muted); font-weight: 400; font-size: .875rem;
+      white-space: nowrap; text-decoration: none;
+      transition: color .18s, border-color .18s;
     }
+    .nav a:hover { color: var(--accent); }
+    .nav a[aria-current="true"] { color: var(--accent); border-bottom-color: var(--accent); }
 
-    .nav a:hover{
-      color: var(--accent);
-      background: var(--accent-weak);
-      text-decoration: none;
-    }
-
-    .nav a:focus-visible{
-      outline: none;
-      box-shadow: var(--focus);
-    }
-
-    .nav a[aria-current="true"]{
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
-
-    @media (max-width: 768px){
-      .nav{
-        width: 100%;
-        justify-content: space-between;
-      }
-      .nav a{
-        flex: 1;
-        justify-content: center;
-        padding: var(--space-3) var(--space-2);
-        font-size: .78rem;
-      }
-    }
-
-    .quick-actions{
-      display: flex;
-      gap: var(--space-2);
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    @media (max-width: 768px){
-      .quick-actions{
-        width: 100%;
-        justify-content: center;
-      }
-    }
-
-    .pill{
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 999px;
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 999px;
       border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--muted); font-size: .8rem; font-weight: 400;
+    }
+    .pill-review {
+      border-color: var(--warm);
+      background: var(--warm-light);
+      color: var(--warm);
+    }
+
+    @media (max-width: 600px) {
+      .topbar { padding: 0 12px; }
+      .nav a { padding: 12px 10px; font-size: .78rem; }
+    }
+
+    /* ── Sections ── */
+    .section {
+      margin-top: clamp(48px, 7vw, 88px);
+      scroll-margin-top: 88px;
+    }
+
+    .section h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.5rem, 2.5vw, 2rem);
+      font-weight: 400; margin: 0 0 8px;
+      color: var(--text); letter-spacing: -.2px;
+    }
+
+    .lead {
+      color: var(--muted); font-size: 1rem;
+      margin: 0 0 clamp(20px, 3vw, 32px);
+      max-width: 64ch; font-weight: 300; line-height: 1.7;
+    }
+
+    /* ── Overview card ── */
+    .overview-card {
       background: var(--surface);
-      color: var(--muted);
-      font-weight: 400;
-      font-size: .8125rem;
-    }
-
-    .pill-link{
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--accent);
-      background: var(--accent-weak);
-      color: var(--accent);
-      font-weight: 500;
-      font-size: .8125rem;
-      transition: background .2s ease, box-shadow .2s ease;
-    }
-
-    .pill-link:hover{
-      background: var(--accent-weak);
-      box-shadow: var(--shadow-sm);
-      text-decoration: none;
-    }
-
-    .pill-link:focus-visible{
-      outline: none;
-      box-shadow: var(--focus);
-    }
-
-    .card{
       border: 1px solid var(--border);
-      background: var(--surface);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-sm);
+      padding: clamp(24px, 4vw, 44px);
     }
 
-    .overview{
-      margin-top: var(--space-6);
-      padding: var(--space-6);
+    .overview-card p {
+      margin: 0 0 14px; color: var(--text);
+      font-weight: 300; line-height: 1.75;
     }
+    .overview-card p:last-of-type { margin-bottom: 0; }
+    .overview-card strong { font-weight: 500; color: var(--text); }
 
-    .overview-title{
-      margin: 0 0 var(--space-4);
-      font-weight: 500;
-      font-size: 1.25rem;
-      color: var(--text);
-    }
-
-    .overview p{
-      margin: 0 0 var(--space-3);
-      width: 100%;
-      color: var(--text);
-    }
-    .overview p:last-child{ margin-bottom: 0; }
-
-    .stats{
-      margin-top: var(--space-5);
+    /* ── Stats grid ── */
+    .stats {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0,1fr));
       gap: 12px;
+      margin-top: clamp(20px, 3vw, 32px);
     }
-    @media (max-width: 900px){
-      .stats{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 520px){
-      .stats{ grid-template-columns: 1fr; }
-    }
+    @media (max-width: 820px) { .stats { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 460px) { .stats { grid-template-columns: 1fr; } }
 
-    .stat{
+    .stat {
+      background: var(--surface2);
       border: 1px solid var(--border);
-      background: var(--bg);
       border-radius: var(--radius);
-      padding: var(--space-4);
-      box-shadow: var(--shadow-sm);
+      padding: 18px 20px;
+      position: relative; overflow: hidden;
+    }
+    .stat::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--stat-accent, var(--accent));
+      opacity: .7;
     }
 
-    .stat .k{
-      font-size: .6875rem;
-      text-transform: uppercase;
-      letter-spacing: .5px;
-      color: var(--muted);
-      margin-bottom: 8px;
-      font-weight: 500;
+    .stat .k {
+      font-size: .68rem; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--muted);
+      margin-bottom: 8px; font-weight: 500;
+    }
+    .stat .v {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.65rem; color: var(--text);
+      margin: 0; line-height: 1.1; letter-spacing: -.3px;
+    }
+    .stat .s {
+      margin-top: 6px; font-size: .83rem;
+      color: var(--muted); font-weight: 300;
     }
 
-    .stat .v{
-      font-size: 1.5rem;
-      font-weight: 400;
-      letter-spacing: -0.4px;
-      margin: 0;
-      color: var(--text);
+    /* highlight band inside overview */
+    .highlight-band {
+      margin: 20px 0 0;
+      padding: 16px 20px;
+      background: var(--accent-light);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      font-size: .95rem; color: var(--text);
+      font-weight: 300; line-height: 1.6;
     }
+    .highlight-band strong { font-weight: 500; color: var(--accent); }
 
-    .stat .s{
-      margin-top: 6px;
-      font-size: .875rem;
-      color: var(--muted);
-      font-weight: 400;
-    }
+    /* ── Sample cards ── */
+    .samples { display: grid; gap: 16px; }
 
-    .section{
-      margin-top: var(--space-8);
-      scroll-margin-top: 92px;
-    }
-
-    .section h2{
-      margin: 0 0 var(--space-3);
-      font-size: 1.75rem;
-      font-weight: 400;
-      color: var(--text);
-    }
-
-    .lead{
-      margin: 0 0 var(--space-6);
-      color: var(--muted);
-      width: 100%;
-      font-size: 1.02rem;
-    }
-
-    /* Results: one card with 2 subcharts */
-    .results-card{
-      padding: var(--space-6);
-    }
-
-    .results-header{
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: var(--space-4);
-      flex-wrap: wrap;
-      margin-bottom: var(--space-5);
-    }
-
-    .results-title-wrap{
-      min-width: 240px;
-    }
-
-    .results-title{
-      margin: 0 0 6px;
-      font-size: 1.25rem;
-      font-weight: 500;
-      color: var(--text);
-    }
-
-    .results-subtitle{
-      margin: 0;
-      color: var(--muted);
-      font-size: .95rem;
-    }
-
-    .legend{
-      display: flex;
-      gap: var(--space-4);
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: flex-end;
-    }
-
-    .legend-item{
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-2);
-      font-size: .875rem;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .legend-dot{
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      box-shadow: 0 0 0 1px rgba(0,0,0,.06) inset;
-    }
-    @media (prefers-color-scheme: dark){
-      .legend-dot{ box-shadow: 0 0 0 1px rgba(255,255,255,.10) inset; }
-    }
-
-    .subcharts{
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--space-5);
-      align-items: stretch;
-    }
-
-    @media (max-width: 980px){
-      .subcharts{ grid-template-columns: 1fr; }
-    }
-
-    .subchart{
+    .sample-card {
+      background: var(--surface);
       border: 1px solid var(--border);
-      background: var(--bg);
-      border-radius: var(--radius);
-      padding: var(--space-4);
+      border-radius: var(--radius-lg);
       box-shadow: var(--shadow-sm);
-    }
-
-    .subchart-title{
-      margin: 0 0 var(--space-3);
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--text);
-    }
-
-    .chart-wrapper{
-      position: relative;
-      height: 320px;
-    }
-
-    @media (max-width: 768px){
-      .chart-wrapper{ height: 280px; }
-    }
-
-    .chart-wrapper canvas{
-      width: 100% !important;
-      height: 100% !important;
-      display: block;
-    }
-
-    /* Audio samples */
-    .samples{
-      display: grid;
-      gap: var(--space-4);
-    }
-
-    .sample-card{
       overflow: hidden;
-      transition: box-shadow .28s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: box-shadow .25s ease, transform .25s ease;
     }
-    .sample-card:hover{
+    .sample-card:hover {
       box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
     }
 
-    .sample-grid{
+    .sample-grid {
       display: grid;
-      grid-template-columns: 240px 1fr 1.15fr;
+      grid-template-columns: 200px 1fr 1.15fr;
     }
-    @media (max-width: 950px){
-      .sample-grid{ grid-template-columns: 1fr; }
-    }
+    @media (max-width: 820px) { .sample-grid { grid-template-columns: 1fr; } }
 
-    .cell{
-      padding: var(--space-6);
+    .cell {
+      padding: clamp(16px, 3vw, 28px);
       border-top: 1px solid var(--border);
     }
-    .cell:first-child{
+    .cell:first-child {
       border-top: none;
       border-right: 1px solid var(--border);
-      background: var(--bg);
+      background: var(--surface2);
     }
-    @media (max-width: 950px){
-      .cell:first-child{ border-right: none; }
+    @media (max-width: 820px) { .cell:first-child { border-right: none; } }
+
+    .meta-cell {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px; text-align: center; min-height: 100%;
     }
 
-    .meta-cell{
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      text-align: center;
-      min-height: 100%;
+    .speaker-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.25rem; color: var(--text); margin: 0;
     }
 
-    .speaker-name{
-      font-weight: 500;
-      color: var(--text);
-      font-size: 1.125rem;
-      margin: 0;
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 4px 14px; border-radius: 999px;
+      font-size: .78rem; font-weight: 500;
+      border: 1px solid transparent; white-space: nowrap;
     }
 
-    .badge{
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 12px;
-      border-radius: 999px;
-      font-size: .8125rem;
-      font-weight: 500;
-      border: 1px solid rgba(0,0,0,.06);
-      white-space: nowrap;
-    }
-    @media (prefers-color-scheme: dark){
-      .badge{ border-color: rgba(255,255,255,.10); }
+    .severity-mild    { background: rgba(52,199,89,.12);  color: #1a6e30;  border-color: rgba(52,199,89,.25); }
+    .severity-mod     { background: rgba(255,200,0,.14);  color: #8a6400;  border-color: rgba(255,200,0,.28); }
+    .severity-modsev  { background: rgba(255,149,0,.13);  color: #b35a00;  border-color: rgba(255,149,0,.28); }
+    .severity-severe  { background: rgba(255,59,48,.12);  color: #991010;  border-color: rgba(255,59,48,.25); }
+
+    @media (prefers-color-scheme: dark) {
+      .severity-mild   { color: #86efac; border-color: rgba(134,239,172,.3); }
+      .severity-mod    { color: #fde68a; border-color: rgba(253,230,138,.3); }
+      .severity-modsev { color: #fdba74; border-color: rgba(253,186,116,.3); }
+      .severity-severe { color: #fca5a5; border-color: rgba(252,165,165,.3); }
     }
 
-    .severity-mild{ background: rgba(52,199,89,.16); color: #1f7a3a; }
-    .severity-mod{ background: rgba(255, 210, 10, 0.238); color:  #a47e01; }
-    .severity-modsev{ background: rgba(255, 176, 58, 0.14); color: #e57615;}
-    .severity-severe{ background: rgba(255,59,48,.18); color: #a31212; }
-
-    @media (prefers-color-scheme: dark){
-      .severity-mild{ color: #86efac; }
-      .severity-mod{ color: #fde68a; }
-      .severity-modsev{ color: #fdba74; }
-      .severity-severe{ color: #fca5a5; }
+    .label {
+      font-size: .68rem; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--muted);
+      margin-bottom: 8px; font-weight: 500;
     }
 
-    .label{
-      font-size: .6875rem;
-      text-transform: uppercase;
-      letter-spacing: .5px;
-      color: var(--muted);
-      margin-bottom: var(--space-2);
-      font-weight: 500;
+    .transcript {
+      margin: 0 0 14px; color: var(--muted);
+      font-style: italic; line-height: 1.55; font-size: .95rem;
     }
 
-    .transcript{
-      margin: 0 0 var(--space-3);
-      color: var(--muted);
-      font-style: italic;
-      line-height: 1.5;
+    audio {
+      width: 100%; height: 36px;
+      accent-color: var(--accent);
+    }
+    audio:focus-visible {
+      outline: none; box-shadow: var(--focus); border-radius: 8px;
     }
 
-    audio{
-      width: 100%;
-      height: 36px;
+    /* ── Section number badge ── */
+    .section-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--accent-mid); color: var(--accent);
+      font-size: .78rem; font-weight: 500;
+      margin-right: 10px; vertical-align: middle;
+      position: relative; top: -3px;
     }
 
-    audio:focus-visible{
-      outline: none;
-      box-shadow: var(--focus);
-      border-radius: 10px;
+    /* ── Back to top ── */
+    .back-to-top {
+      position: fixed; right: 24px; bottom: 24px; z-index: 30;
+      opacity: 0; pointer-events: none; transform: scale(.8);
+      transition: opacity .2s ease, transform .2s ease;
     }
+    .back-to-top.show { opacity: 1; pointer-events: auto; transform: scale(1); }
 
-    .back-to-top{
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      z-index: 30;
-      opacity: 0;
-      pointer-events: none;
-      transform: scale(0);
-      transition: opacity .2s cubic-bezier(0.4, 0, 0.2, 1), transform .2s cubic-bezier(0.4, 0, 0.2, 1);
+    .back-to-top button {
+      border: 1px solid var(--border);
+      background: var(--surface); color: var(--accent);
+      border-radius: 999px; padding: 10px 18px;
+      box-shadow: var(--shadow-lg); font-weight: 500;
+      cursor: pointer; font-size: .83rem;
+      font-family: 'DM Sans', sans-serif;
+      transition: box-shadow .18s;
     }
+    .back-to-top button:hover { box-shadow: var(--shadow-lg), 0 0 0 1px var(--accent-mid); }
+    .back-to-top button:focus-visible { outline: none; box-shadow: var(--focus); }
 
-    .back-to-top button{
-      border: none;
-      background: var(--bg);
-      color: var(--accent);
-      border-radius: 999px;
-      padding: 12px 20px;
-      box-shadow: var(--shadow-lg);
-      font-weight: 500;
-      cursor: pointer;
-      font-size: .875rem;
-    }
-
-    .back-to-top button:hover{
-      box-shadow: var(--shadow-lg), 0 0 0 1px var(--border);
-    }
-
-    .back-to-top button:focus-visible{
-      outline: none;
-      box-shadow: var(--focus), var(--shadow-lg);
-    }
-
-    .back-to-top.show{
-      opacity: 1;
-      pointer-events: auto;
-      transform: scale(1);
-    }
-
-    footer{
-      margin-top: var(--space-8);
-      padding-top: var(--space-6);
+    /* ── Footer ── */
+    footer {
+      margin-top: clamp(56px, 8vw, 96px);
+      padding-top: 28px;
       border-top: 1px solid var(--border);
-      color: var(--muted);
-      text-align: center;
-      font-size: .95rem;
+      color: var(--muted); text-align: center;
+      font-size: .88rem; font-weight: 300;
+    }
+    footer p { margin: 4px 0; }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px; background: var(--border);
+      margin: clamp(32px, 5vw, 56px) 0; border: none;
     }
 
-    @media print{
-      body{ background: #fff; }
-      .topbar, .back-to-top{ display: none; }
-      header, .card{ box-shadow: none; }
-      audio{ display: none; }
+    @media print {
+      .topbar, .back-to-top { display: none; }
+      audio { display: none; }
     }
   </style>
 </head>
@@ -650,142 +391,115 @@
   <a class="skip-link" href="#main">Skip to content</a>
 
   <div class="container" id="top">
-    <header>
-      <div class="eyebrow">2026 • Audio Samples</div>
-      <h1>Low-Burden Data Augmentation for Dysarthric ASR via Zero-Shot Voice Cloning</h1>
-      <p class="subhead">
-        A lightweight approach that uses a single short reference utterance per speaker to generate diverse synthetic speech,
-        improving ASR performance with minimal real data.
-      </p>
 
-      <div class="meta">
-      <p class="authors">
-          <a href="https://profiles.auckland.ac.nz/satwinder-singh" target="_blank" rel="noopener">Satwinder Singh</a>*,
-          <a href="https://profiles.auckland.ac.nz/ben-wang" target="_blank" rel="noopener">Qianli Wang</a>*,
-          <a href="https://profiles.auckland.ac.nz/zzho680" target="_blank" rel="noopener">Zihan Zhong</a>*,
-          <a href="https://experts.illinois.edu/en/persons/clarion-c-mendes/" target="_blank" rel="noopener">Clarion Mendes</a>†,
-          <a href="https://ece.illinois.edu/about/directory/faculty/jhasegaw" target="_blank" rel="noopener">Mark Hasegawa-Johnson</a>†,
-          <a href="https://profiles.auckland.ac.nz/w-abdulla" target="_blank" rel="noopener">Waleed Abdulla</a>*,
-          <a href="https://profiles.auckland.ac.nz/reza-shahamiri" target="_blank" rel="noopener">Seyed Reza Shahamiri</a>*
-        </p>
-        <p class="affiliations">
-          *University of Auckland, New Zealand &nbsp;|&nbsp; †University of Illinois Urbana-Champaign, USA
-        </p>
-      </div>
+    <header>
+      <div class="eyebrow">Interspeech 2026 · Audio Samples</div>
+      <h1>Low-Burden Data Augmentation for&nbsp;Dysarthric ASR via Zero-Shot Voice&nbsp;Cloning</h1>
+      <p class="subhead">
+        Audio samples accompanying the submission. A lightweight approach that requires only
+        a single short reference utterance per speaker to generate diverse synthetic speech
+        for fine-tuning dysarthric ASR systems.
+      </p>
     </header>
 
     <div class="topbar" role="navigation" aria-label="Page navigation">
-      <div class="nav" id="severityNav">
-        <a href="#overview" data-target="overview">Overview</a>
-        <a href="#results" data-target="results">Results</a>
-        <a href="#mild" data-target="mild">Mild</a>
-        <a href="#moderate" data-target="moderate">Moderate</a>
-        <a href="#modsevere" data-target="modsevere">Mod-Severe</a>
-        <a href="#severe" data-target="severe">Severe</a>
-      </div>
-      <div class="quick-actions" aria-label="Quick actions">
-        <span class="pill">Under Review</span>
+      <nav class="nav" id="severityNav">
+        <a href="#overview"   data-target="overview">Overview</a>
+        <a href="#mild"       data-target="mild">Mild</a>
+        <a href="#moderate"   data-target="moderate">Moderate</a>
+        <a href="#modsevere"  data-target="modsevere">Mod-Severe</a>
+        <a href="#severe"     data-target="severe">Severe</a>
+      </nav>
+      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+        <span class="pill pill-review">Under Review</span>
         <span class="pill">Use headphones</span>
-        <a class="pill-link" href="assets/paper-2026.pdf" target="_blank" rel="noopener" aria-label="Read the paper PDF">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          Paper
-        </a>
       </div>
     </div>
 
     <main id="main">
+
+      <!-- ── Overview ─────────────────────────────────────────────────── -->
       <section class="section" id="overview" aria-label="Project overview">
-        <div class="card overview">
-          <div class="overview-title">Project overview</div>
+        <h2>Project Overview</h2>
+        <p class="lead">
+          Collecting dysarthric speech is labour-intensive and expensive.
+          We investigate zero-shot voice cloning as a scalable, low-burden augmentation strategy
+          that removes the speaker recording bottleneck entirely.
+        </p>
+
+        <div class="overview-card">
           <p>
-            Collecting dysarthric speech data is labor-intensive and expensive. This work investigates
-            <strong>Zero-Shot Voice Cloning</strong> as a scalable solution. Using only a single
-            ~7-second reference utterance per speaker (from the TORGO dataset), we synthesized 14.94 hours
-            of linguistically diverse speech using Higgs Audio V2.
+            Dysarthric ASR systems are severely limited by data scarcity and high inter-speaker
+            variability. Traditional synthetic augmentation approaches require substantial
+            speaker-specific recordings to build a voice model, reintroducing the very collection
+            burden they aim to avoid. We address this by using <strong>zero-shot voice cloning</strong>
+            (Higgs Audio V2) to synthesise diverse training speech from a
+            <strong>single ~7-second reference utterance per speaker</strong> drawn from the
+            TORGO dataset — no additional recording sessions required.
           </p>
           <p>
-            <strong>Key result:</strong> Adding just 1.55 hours of real dysarthric speech to our cloned dataset
-            reduced WER by <strong>57.59%</strong> compared to the baseline.
+            We fine-tune Whisper-medium on three data configurations — clone-only, real-only,
+            and a clone+real hybrid — and evaluate on held-out real dysarthric speech across
+            all 8 TORGO speakers. Results show that clone speech alone provides a significant
+            adaptation signal, with the hybrid condition delivering the strongest gains for
+            the most challenging speaker groups.
           </p>
+
+          <div class="highlight-band">
+            <strong>Key finding:</strong> Clone-only fine-tuning (15 h synthetic) reduces
+            overall WER from 31.62 % to 26.00 % (17.8 % relative reduction,
+            <em>p</em>&thinsp;=&thinsp;0.010). The clone+real hybrid achieves the best
+            moderate-severe group WER of 37.49 % — a <strong>31.4 % relative reduction</strong>
+            over zero-shot — from just a single reference utterance per speaker.
+          </div>
 
           <div class="stats" aria-label="Key numbers">
             <div class="stat">
-              <div class="k">Per speaker input</div>
-              <p class="v">1 reference</p>
-              <div class="s">About 7 seconds</div>
+              <div class="k">Reference input</div>
+              <p class="v">1 utterance</p>
+              <div class="s">~7 s per speaker</div>
+            </div>
+            <div class="stat" style="--stat-accent: var(--warm)">
+              <div class="k">Synthetic data generated</div>
+              <p class="v">15h</p>
+              <div class="s">Higgs Audio V2 · 8 speakers</div>
             </div>
             <div class="stat">
-              <div class="k">Synthetic speech</div>
-              <p class="v">14.94 hours</p>
-              <div class="s">Higgs Audio V2</div>
+              <div class="k">Clone-only WER</div>
+              <p class="v">26.00 %</p>
+              <div class="s">↓ from 31.62 % zero-shot</div>
             </div>
-            <div class="stat">
-              <div class="k">Real speech added</div>
-              <p class="v">1.55 hours</p>
-              <div class="s">Small, high impact</div>
-            </div>
-            <div class="stat">
-              <div class="k">WER change</div>
-              <p class="v">57.59%</p>
-              <div class="s">Relative reduction</div>
+            <div class="stat" style="--stat-accent: #c17f3a">
+              <div class="k">Best mod-severe WER</div>
+              <p class="v">37.49 %</p>
+              <div class="s">Hybrid · 31.4 % rel. reduction</div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="section" id="results" aria-label="Results">
-        <h2>Results</h2>
-        <p class="lead">Two complementary views of Word Error Rate (WER): severity-level and speaker-level.</p>
+      <hr class="divider">
 
-        <div class="card results-card" aria-label="Results card with two charts">
-          <div class="results-header">
-            <div class="results-title-wrap">
-              <h3 class="results-title">Word Error Rate (WER)</h3>
-              <p class="results-subtitle">Baseline vs fine-tuning with clone-only and clone-plus-real data.</p>
-            </div>
-
-            <div class="legend" aria-label="Legend">
-              <span class="legend-item"><span class="legend-dot" style="background:#ea4335"></span>Baseline</span>
-              <span class="legend-item"><span class="legend-dot" style="background:#fbbc04"></span>FT–Clone-only</span>
-              <span class="legend-item"><span class="legend-dot" style="background:#34a853"></span>FT–Clone+Real</span>
-            </div>
-          </div>
-
-          <div class="subcharts">
-            <div class="subchart" aria-label="WER by severity">
-              <h4 class="subchart-title">By severity</h4>
-              <div class="chart-wrapper">
-                <canvas id="severityChart" aria-label="WER by severity chart"></canvas>
-              </div>
-            </div>
-
-            <div class="subchart" aria-label="WER by speaker">
-              <h4 class="subchart-title">By speaker</h4>
-              <div class="chart-wrapper">
-                <canvas id="speakerChart" aria-label="WER by speaker chart"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="mild" aria-label="Mild dysarthria">
-        <h2>1. Mild Dysarthria</h2>
+      <!-- ── Mild ─────────────────────────────────────────────────────── -->
+      <section class="section" id="mild" aria-label="Mild dysarthria samples">
+        <h2><span class="section-num" aria-hidden="true">1</span>Mild Dysarthria</h2>
         <p class="lead">
-          Speakers with mild dysarthria retain relatively clear articulation but exhibit minor prosodic irregularities.
-          Cloning fidelity is generally very high.
+          Speakers with mild dysarthria retain relatively clear articulation with minor prosodic
+          irregularities. Cloning fidelity is generally high, producing naturalistic voice
+          characteristics with subtle preserved dysarthric traits.
         </p>
 
         <div class="samples">
+
           <article class="card sample-card" aria-label="Speaker F04 samples">
             <div class="sample-grid">
               <div class="cell meta-cell">
-                <div class="speaker-name">Speaker F04</div>
+                <p class="speaker-name">F04</p>
                 <span class="badge severity-mild">Mild</span>
               </div>
               <div class="cell">
                 <div class="label">Reference (Input)</div>
-                <p class="transcript">"The quick brown fox jumps..."</p>
+                <p class="transcript">"The quick brown fox jumps…"</p>
                 <audio controls aria-label="Reference audio for Speaker F04">
                   <source src="audio/ref-f04.wav" type="audio/wav" />
                 </audio>
@@ -803,7 +517,7 @@
           <article class="card sample-card" aria-label="Speaker M03 samples">
             <div class="sample-grid">
               <div class="cell meta-cell">
-                <div class="speaker-name">Speaker M03</div>
+                <p class="speaker-name">M03</p>
                 <span class="badge severity-mild">Mild</span>
               </div>
               <div class="cell">
@@ -815,7 +529,7 @@
               </div>
               <div class="cell">
                 <div class="label">Cloned Output</div>
-                <p class="transcript">"Play a beatles song on Amazon music."</p>
+                <p class="transcript">"Play a Beatles song on Amazon music."</p>
                 <audio controls aria-label="Cloned audio for Speaker M03">
                   <source src="audio/clone-m03.wav" type="audio/wav" />
                 </audio>
@@ -826,52 +540,57 @@
           <article class="card sample-card" aria-label="Speaker F03 samples">
             <div class="sample-grid">
               <div class="cell meta-cell">
-                <div class="speaker-name">Speaker F03</div>
+                <p class="speaker-name">F03</p>
                 <span class="badge severity-mild">Mild</span>
               </div>
               <div class="cell">
                 <div class="label">Reference (Input)</div>
-                <p class="transcript">"The quick brown fox jumps..."</p>
+                <p class="transcript">"The quick brown fox jumps…"</p>
                 <audio controls aria-label="Reference audio for Speaker F03">
                   <source src="audio/ref-f03.wav" type="audio/wav" />
                 </audio>
               </div>
               <div class="cell">
                 <div class="label">Cloned Output</div>
-                <p class="transcript">"This morning he was feeling very goodnatured."</p>
+                <p class="transcript">"This morning he was feeling very good-natured."</p>
                 <audio controls aria-label="Cloned audio for Speaker F03">
                   <source src="audio/clone-f03.wav" type="audio/wav" />
                 </audio>
               </div>
             </div>
           </article>
+
         </div>
       </section>
 
-      <section class="section" id="moderate" aria-label="Moderate dysarthria">
-        <h2>2. Moderate Dysarthria</h2>
+      <!-- ── Moderate ──────────────────────────────────────────────────── -->
+      <section class="section" id="moderate" aria-label="Moderate dysarthria samples">
+        <h2><span class="section-num" aria-hidden="true">2</span>Moderate Dysarthria</h2>
         <p class="lead">
-          Consistent patterns of dysarthria but with better intelligibility than severe cases.
-          The model begins to capture more distinct pathological traits.
+          Consistent patterns of dysarthria with better intelligibility than severe cases.
+          The cloning model captures distinct prosodic irregularities while maintaining
+          overall speaker identity. Note that all fine-tuning conditions degrade WER
+          for this speaker relative to zero-shot, indicating a distribution mismatch
+          with the training data.
         </p>
 
         <div class="samples">
           <article class="card sample-card" aria-label="Speaker M05 samples">
             <div class="sample-grid">
               <div class="cell meta-cell">
-                <div class="speaker-name">Speaker M05</div>
+                <p class="speaker-name">M05</p>
                 <span class="badge severity-mod">Moderate</span>
               </div>
               <div class="cell">
                 <div class="label">Reference (Input)</div>
-                <p class="transcript">"The quick brown fox jumps..."</p>
+                <p class="transcript">"The quick brown fox jumps…"</p>
                 <audio controls aria-label="Reference audio for Speaker M05">
                   <source src="audio/ref-m05.wav" type="audio/wav" />
                 </audio>
               </div>
               <div class="cell">
                 <div class="label">Cloned Output</div>
-                <p class="transcript">"Brown and day had asked him to call again."</p>
+                <p class="transcript">"Brown and Day had asked him to call again."</p>
                 <audio controls aria-label="Cloned audio for Speaker M05">
                   <source src="audio/clone-m05.wav" type="audio/wav" />
                 </audio>
@@ -881,22 +600,27 @@
         </div>
       </section>
 
-      <section class="section" id="modsevere" aria-label="Moderate-Severe dysarthria">
-        <h2>3. Moderate-Severe Dysarthria</h2>
+      <!-- ── Moderate-Severe ───────────────────────────────────────────── -->
+      <section class="section" id="modsevere" aria-label="Moderate-Severe dysarthria samples">
+        <h2><span class="section-num" aria-hidden="true">3</span>Moderate-Severe Dysarthria</h2>
         <p class="lead">
-          Prosody becomes significantly labored, with noticeable breathiness, pauses, and articulation errors.
+          Prosody becomes significantly laboured with noticeable breathiness, pauses, and
+          articulation errors. Clone fine-tuning is most potent here — the clone+real hybrid
+          achieves a <strong>31.4 % relative WER reduction</strong> over zero-shot for this group,
+          outperforming real-data-only fine-tuning.
         </p>
 
         <div class="samples">
+
           <article class="card sample-card" aria-label="Speaker F01 samples">
             <div class="sample-grid">
               <div class="cell meta-cell">
-                <div class="speaker-name">Speaker F01</div>
-                <span class="badge severity-modsev">Moderate-Severe</span>
+                <p class="speaker-name">F01</p>
+                <span class="badge severity-modsev">Mod-Severe</span>
               </div>
               <div class="cell">
                 <div class="label">Reference (Input)</div>
-                <p class="transcript">"The quick brown fox jumps..."</p>
+                <p class="transcript">"The quick brown fox jumps…"</p>
                 <audio controls aria-label="Reference audio for Speaker F01">
                   <source src="audio/ref-f01.wav" type="audio/wav" />
                 </audio>
@@ -914,12 +638,12 @@
           <article class="card sample-card" aria-label="Speaker M01 samples">
             <div class="sample-grid">
               <div class="cell meta-cell">
-                <div class="speaker-name">Speaker M01</div>
-                <span class="badge severity-modsev">Moderate-Severe</span>
+                <p class="speaker-name">M01</p>
+                <span class="badge severity-modsev">Mod-Severe</span>
               </div>
               <div class="cell">
                 <div class="label">Reference (Input)</div>
-                <p class="transcript">"The quick brown fox jumps..."</p>
+                <p class="transcript">"The quick brown fox jumps…"</p>
                 <audio controls aria-label="Reference audio for Speaker M01">
                   <source src="audio/ref-m01.wav" type="audio/wav" />
                 </audio>
@@ -937,12 +661,12 @@
           <article class="card sample-card" aria-label="Speaker M02 samples">
             <div class="sample-grid">
               <div class="cell meta-cell">
-                <div class="speaker-name">Speaker M02</div>
-                <span class="badge severity-modsev">Moderate-Severe</span>
+                <p class="speaker-name">M02</p>
+                <span class="badge severity-modsev">Mod-Severe</span>
               </div>
               <div class="cell">
                 <div class="label">Reference (Input)</div>
-                <p class="transcript">"The quick brown fox jumps..."</p>
+                <p class="transcript">"The quick brown fox jumps…"</p>
                 <audio controls aria-label="Reference audio for Speaker M02">
                   <source src="audio/ref-m02.wav" type="audio/wav" />
                 </audio>
@@ -956,32 +680,36 @@
               </div>
             </div>
           </article>
+
         </div>
       </section>
 
-      <section class="section" id="severe" aria-label="Severe dysarthria">
-        <h2>4. Severe Dysarthria</h2>
+      <!-- ── Severe ────────────────────────────────────────────────────── -->
+      <section class="section" id="severe" aria-label="Severe dysarthria samples">
+        <h2><span class="section-num" aria-hidden="true">4</span>Severe Dysarthria</h2>
         <p class="lead">
-          High variability, significant pauses, slurrying, and unstable phonation. Cloning fidelity is most challenging here,
-          yet significant ASR gains were achieved.
+          High variability, significant pauses, slurring, and unstable phonation make this
+          the most challenging group to clone. Despite reduced fidelity, real-data fine-tuning
+          achieves a <strong>26.9 % relative WER reduction</strong> for this speaker
+          (82.32 % → 60.22 %).
         </p>
 
         <div class="samples">
           <article class="card sample-card" aria-label="Speaker M04 samples">
             <div class="sample-grid">
               <div class="cell meta-cell">
-                <div class="speaker-name">Speaker M04</div>
+                <p class="speaker-name">M04</p>
                 <span class="badge severity-severe">Severe</span>
               </div>
               <div class="cell">
                 <div class="label">Reference (Input)</div>
-                <p class="transcript">"The quick brown fox jumps..."</p>
+                <p class="transcript">"The quick brown fox jumps…"</p>
                 <audio controls aria-label="Reference audio for Speaker M04">
                   <source src="audio/ref-m04.wav" type="audio/wav" />
                 </audio>
               </div>
               <div class="cell">
-                <div class="label">Cloned Output (Zero-Shot)</div>
+                <div class="label">Cloned Output</div>
                 <p class="transcript">"I will explain to his lordship."</p>
                 <audio controls aria-label="Cloned audio for Speaker M04">
                   <source src="audio/clone-m04.wav" type="audio/wav" />
@@ -993,153 +721,48 @@
       </section>
 
       <footer>
-        <p>Under review</p>
-        <p>&copy; 2025 University of Auckland &amp; UIUC</p>
+        <p>Submitted to Interspeech 2026 — currently under double-blind review.</p>
+        <p>Audio samples are provided for reviewer evaluation only.</p>
       </footer>
+
     </main>
   </div>
 
   <div class="back-to-top" id="backToTop" aria-label="Back to top">
-    <button type="button" id="backToTopBtn" aria-label="Scroll to top">Top</button>
+    <button type="button" id="backToTopBtn">↑ Top</button>
   </div>
 
   <script>
     (function () {
       const backToTop = document.getElementById("backToTop");
-      const backToTopBtn = document.getElementById("backToTopBtn");
-      const nav = document.getElementById("severityNav");
-      const links = Array.from(nav.querySelectorAll("a[data-target]"));
+      const nav       = document.getElementById("severityNav");
+      const links     = Array.from(nav.querySelectorAll("a[data-target]"));
 
-      function setCurrent(targetId) {
-        links.forEach(a => {
-          const isCurrent = a.getAttribute("data-target") === targetId;
-          a.setAttribute("aria-current", isCurrent ? "true" : "false");
-        });
+      function setCurrent(id) {
+        links.forEach(a =>
+          a.setAttribute("aria-current", a.getAttribute("data-target") === id ? "true" : "false")
+        );
       }
 
       function onScroll() {
         const y = window.scrollY || document.documentElement.scrollTop;
-        backToTop.classList.toggle("show", y > 600);
+        backToTop.classList.toggle("show", y > 500);
 
-        const sections = ["overview","results","mild","moderate","modsevere","severe"]
-          .map(id => document.getElementById(id))
-          .filter(Boolean);
-
+        const ids = ["overview","mild","moderate","modsevere","severe"];
         let current = "overview";
-        for (const s of sections) {
-          const rect = s.getBoundingClientRect();
-          if (rect.top <= 140) current = s.id;
+        for (const id of ids) {
+          const el = document.getElementById(id);
+          if (el && el.getBoundingClientRect().top <= 120) current = id;
         }
         setCurrent(current);
       }
 
-      backToTopBtn.addEventListener("click", () => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      });
+      document.getElementById("backToTopBtn").addEventListener("click", () =>
+        window.scrollTo({ top: 0, behavior: "smooth" })
+      );
 
       window.addEventListener("scroll", onScroll, { passive: true });
       window.addEventListener("load", onScroll);
-
-      function initCharts() {
-        if (typeof Chart === "undefined") {
-          console.error("Chart.js not loaded");
-          return;
-        }
-
-        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const textColor = isDark ? "#e8eaed" : "#202124";
-        const gridColor = isDark ? "#5f6368" : "#dadce0";
-
-        Chart.defaults.color = textColor;
-
-        const commonOptions = {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(context){
-                  return context.dataset.label + ": " + context.parsed.y.toFixed(2) + "%";
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: "Word Error Rate (%)",
-                color: textColor,
-                font: { size: 12, weight: "500" }
-              },
-              ticks: { color: textColor },
-              grid: { color: gridColor }
-            },
-            x: {
-              ticks: { color: textColor },
-              grid: { display: false }
-            }
-          }
-        };
-
-        const severityCanvas = document.getElementById("severityChart");
-        if (severityCanvas) {
-          new Chart(severityCanvas.getContext("2d"), {
-            type: "bar",
-            data: {
-              labels: ["Severe", "Mod-Severe", "Moderate", "Mild"],
-              datasets: [
-                { label: "Baseline", data: [75.85, 58.64, 39.88, 6.57], backgroundColor: "#ea4335", borderRadius: 6 },
-                { label: "FT–Clone-only", data: [63.54, 41.08, 42.19, 9.00], backgroundColor: "#fbbc04", borderRadius: 6 },
-                { label: "FT–Clone+Real", data: [32.97, 19.96, 19.05, 4.81], backgroundColor: "#34a853", borderRadius: 6 }
-              ]
-            },
-            options: commonOptions
-          });
-        }
-
-        const speakerCanvas = document.getElementById("speakerChart");
-        if (speakerCanvas) {
-          new Chart(speakerCanvas.getContext("2d"), {
-            type: "bar",
-            data: {
-              labels: ["M04","F01","M01","M02","M05","F03","F04","M03"],
-              datasets: [
-                { label: "Baseline", data: [75.85, 70.21, 58.10, 47.62, 39.88, 14.02, 4.02, 1.67], backgroundColor: "#ea4335", borderRadius: 6 },
-                { label: "FT–Clone-only", data: [63.54, 43.40, 44.55, 35.30, 42.19, 17.74, 5.61, 3.66], backgroundColor: "#fbbc04", borderRadius: 6 },
-                { label: "FT–Clone+Real", data: [32.97, 25.00, 13.62, 21.25, 19.05, 9.52, 2.63, 2.29], backgroundColor: "#34a853", borderRadius: 6 }
-              ]
-            },
-            options: commonOptions
-          });
-        }
-      }
-
-      function waitForChartThenInit() {
-        if (typeof Chart !== "undefined") {
-          initCharts();
-          return;
-        }
-        let tries = 0;
-        const t = setInterval(() => {
-          tries += 1;
-          if (typeof Chart !== "undefined") {
-            clearInterval(t);
-            initCharts();
-          } else if (tries > 60) {
-            clearInterval(t);
-            console.error("Chart.js failed to load after waiting");
-          }
-        }, 50);
-      }
-
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", waitForChartThenInit);
-      } else {
-        waitForChartThenInit();
-      }
     })();
   </script>
 </body>
